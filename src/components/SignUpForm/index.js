@@ -71,17 +71,6 @@ class SignUpForm extends Component {
 
     return (
       <div className="login-form-container">
-        <h1
-          style={{
-            color: '#0b69ff',
-            fontFamily: 'Roboto',
-            fontWeight: 'bold',
-            fontSize: '40px',
-            margin: 0,
-          }}
-        >
-          NexCart
-        </h1>
         <img
           src="https://assets.ccbp.in/frontend/react-js/nxt-trendz-login-img.png"
           className="login-image"
