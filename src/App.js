@@ -87,42 +87,49 @@ class App extends Component {
   // --- CART ACTIONS ---
 
   addCartItem = product => {
-    this.setState(prevState => {
-      const {cartList, budgetLimit} = prevState
-      let potentialTotal = 0
-      const productObject = cartList.find(item => item.id === product.id)
+    this.setState(
+      prevState => {
+        const {cartList, budgetLimit} = prevState
+        let potentialTotal = 0
+        const productObject = cartList.find(item => item.id === product.id)
 
-      if (productObject) {
-        potentialTotal =
-          this.calculateTotal(cartList) + product.price * product.quantity
-      } else {
-        potentialTotal =
-          this.calculateTotal(cartList) + product.price * product.quantity
-      }
+        if (productObject) {
+          potentialTotal =
+            this.calculateTotal(cartList) + product.price * product.quantity
+        } else {
+          potentialTotal =
+            this.calculateTotal(cartList) + product.price * product.quantity
+        }
 
-      if (budgetLimit > 0 && potentialTotal > budgetLimit) {
-        // eslint-disable-next-line no-alert
-        alert(
-          `⚠️ Budget Warning!\n\nAdding this item will exceed your budget of ₹${budgetLimit}.`,
-        )
-      }
+        if (budgetLimit > 0 && potentialTotal > budgetLimit) {
+          // eslint-disable-next-line no-alert
+          alert(
+            `⚠️ Budget Warning!\n\nAdding this item will exceed your budget of ₹${budgetLimit}.`,
+          )
+          // 🛑 SOLUTION: Return null here to stop the state update and prevent the item from being added.
+          return null
+        }
 
-      let updatedCartList
-      if (productObject) {
-        updatedCartList = cartList.map(eachCartItem => {
-          if (productObject.id === eachCartItem.id) {
-            const updatedQuantity = eachCartItem.quantity + product.quantity
-            return {...eachCartItem, quantity: updatedQuantity}
-          }
-          return eachCartItem
-        })
-      } else {
-        updatedCartList = [...cartList, product]
-      }
-
-      this.syncCartToDB(updatedCartList)
-      return {cartList: updatedCartList}
-    })
+        let updatedCartList
+        if (productObject) {
+          updatedCartList = cartList.map(eachCartItem => {
+            if (productObject.id === eachCartItem.id) {
+              const updatedQuantity = eachCartItem.quantity + product.quantity
+              return {...eachCartItem, quantity: updatedQuantity}
+            }
+            return eachCartItem
+          })
+        } else {
+          updatedCartList = [...cartList, product]
+        }
+        this.syncCartToDB(updatedCartList)
+        return {cartList: updatedCartList}
+      },
+      () => {
+        const {cartList} = this.state
+        this.syncCartToDB(cartList)
+      },
+    )
   }
 
   deleteCartItem = id => {
@@ -158,12 +165,25 @@ class App extends Component {
     })
   }
 
+  // ... inside class App extends Component
   decrementCartItemQuantity = id => {
     this.setState(prevState => {
+      const item = prevState.cartList.find(i => i.id === id)
+
+      // 🛑 SOLUTION: Check if the quantity is 1 and remove the item by filtering it out.
+      if (item && item.quantity === 1) {
+        const updatedCartList = prevState.cartList.filter(
+          eachCartItem => eachCartItem.id !== id,
+        )
+        this.syncCartToDB(updatedCartList)
+        return {cartList: updatedCartList}
+      }
+
+      // If quantity is > 1, proceed with decrementing
       const updatedCartList = prevState.cartList.map(eachCartItem => {
         if (id === eachCartItem.id) {
           const updatedQuantity = eachCartItem.quantity - 1
-          if (updatedQuantity < 1) return eachCartItem
+          // The check (updatedQuantity < 1) is no longer needed here.
           return {...eachCartItem, quantity: updatedQuantity}
         }
         return eachCartItem
